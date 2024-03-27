@@ -1,0 +1,8 @@
+eclipse2024/ppath.shp filter=lfs diff=lfs merge=lfs -text
+eclipse2024/ppath01.shp filter=lfs diff=lfs merge=lfs -text
+eclipse2024/umbra_hi.shp filter=lfs diff=lfs merge=lfs -text
+eclipse2024/umbra_lo.shp filter=lfs diff=lfs merge=lfs -text
+eclipse2024/upath_hi.shp filter=lfs diff=lfs merge=lfs -text
+eclipse2024/upath_lo.shp filter=lfs diff=lfs merge=lfs -text
+eclipse2024/center.shp filter=lfs diff=lfs merge=lfs -text
+eclipse2024/duration.shp filter=lfs diff=lfs merge=lfs -text
