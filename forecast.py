@@ -80,7 +80,7 @@ def calculate_forecast(coordinates: Tuple[Numeric, Numeric], location: str = '')
         start=pd.to_datetime(hourly.Time(), unit="s", utc=True),
         end=pd.to_datetime(hourly.TimeEnd(), unit="s", utc=True),
         freq=pd.Timedelta(seconds=hourly.Interval()),
-        inclusive="left"
+        inclusive='left'
     )
     dates = list(map(lambda x: x.to_pydatetime(), dates))
     ds = Dataset(data_vars=hourly_data, coords={'date': (('date', ), dates)})
@@ -115,5 +115,25 @@ if __name__ == '__main__':
         "potsdamNY": [44.6698, -74.9813],
         "toledoNY": [41.6639, -83.5552],
     }
+
+    #%%
+    results = []
     for location, coordinates in locations.items():
-        print(calculate_forecast(coordinates, location))
+        result = calculate_forecast(coordinates, location)
+        results.append(result)
+        print(result)
+
+#%%
+    # print(result)
+    HH = 15
+    datetimes = [forecast_datapoint['date'].values[HH] for forecast_datapoint in results]
+    overcast_datapoints = [forecast_datapoint['cloud_cover'].values[HH] for forecast_datapoint in results]
+    print(datetimes)
+    print(overcast_datapoints)
+
+    # for result in results:
+    #     for i, date in enumerate(result['date']):
+    #         if '19:00' in str(date):
+    #             print(date.values)
+    #             print(result['cloud_cover'][i].values)
+#%%
