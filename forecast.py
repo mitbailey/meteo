@@ -114,6 +114,8 @@ if __name__ == '__main__':
         "champlainNY": [44.9864, -73.4465],
         "potsdamNY": [44.6698, -74.9813],
         "toledoNY": [41.6639, -83.5552],
+
+        "lyndonVT": [44.5142, -72.0109],
     }
 
     #%%
@@ -122,18 +124,22 @@ if __name__ == '__main__':
         result = calculate_forecast(coordinates, location)
         results.append(result)
         print(result)
+        # loop and print each overcast value
+        print('OVERCAST:')
+        for item in result['cloud_cover'].values:
+            print(item)
 
 #%%
-    # print(result)
-    HH = 15
-    datetimes = [forecast_datapoint['date'].values[HH] for forecast_datapoint in results]
-    overcast_datapoints = [forecast_datapoint['cloud_cover'].values[HH] for forecast_datapoint in results]
-    print(datetimes)
-    print(overcast_datapoints)
+    # # print(result)
+    # HH = 15
+    # datetimes = [forecast_datapoint['date'].values[HH] for forecast_datapoint in results]
+    # overcast_datapoints = [forecast_datapoint['cloud_cover'].values[HH] for forecast_datapoint in results]
+    # print(datetimes)
+    # print(overcast_datapoints)
 
-    # for result in results:
-    #     for i, date in enumerate(result['date']):
-    #         if '19:00' in str(date):
-    #             print(date.values)
-    #             print(result['cloud_cover'][i].values)
+    # # for result in results:
+    # #     for i, date in enumerate(result['date']):
+    # #         if '19:00' in str(date):
+    # #             print(date.values)
+    # #             print(result['cloud_cover'][i].values)
 #%%

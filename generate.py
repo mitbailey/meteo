@@ -10,11 +10,14 @@ from shapely.geometry import Polygon
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as colors
 
 import openmeteo_requests
 import requests_cache
 from retry_requests import retry
 from xarray import Dataset
+
+# Many things are currently hard-coded which shouldn't be. This is a work in progress.
 
 def init_open_meteo():
     # Setup the Open-Meteo API client with cache and retry on error
@@ -197,13 +200,25 @@ def run_model(HH, n_cells: int = 50):
 
     # print(forecast_datapoints)
     # print(overcast_datapoints)
-    # print([forecast_datapoint['date'].values[HH] for forecast_datapoint in forecast_datapoints])
+    datetimes = [forecast_datapoint['date'].values[HH] for forecast_datapoint in forecast_datapoints]
+
+    for i, _ in enumerate(overcast_datapoints):
+        print(f'{datetimes[i]}: {overcast_datapoints[i]}%')
 
     grid.plot(fc="none", ec='black',ax=ax)
-    grid.plot(column='value', ec='none', lw=0.2, legend=True, cmap='Reds', alpha=0.9, ax=ax)
+    norm=plt.Normalize(vmin=0, vmax=100)
+    cbar=plt.cm.ScalarMappable(norm=norm, cmap='Reds')
+    grid.plot(column='value', ec='none', lw=0.2, legend=False, cmap='Reds', alpha=0.9, ax=ax, vmin=0, vmax=100)
 
-    plt.scatter([c[1] for c in lat_lon_datapoints], [c[0] for c in lat_lon_datapoints], color='black', s=3, marker='x')
+    # plt.scatter([c[1] for c in lat_lon_datapoints], [c[0] for c in lat_lon_datapoints], color='black', s=3, marker='x')
     # print(centerpoints)
+
+    ax.set_title(f'Cloud Cover Forecast for {HH}:00-{HH}:59 EDT on 2024-04-08')
+    ax.set_xlabel('Longitude [degrees]')
+    ax.set_ylabel('Latitude [degrees]')
+
+    ax_cbar = fig.colorbar(cbar, ax=ax)
+    ax_cbar.set_label('Total Cloud Cover [%]')
 
     plt.show()
 
