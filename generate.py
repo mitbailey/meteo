@@ -250,7 +250,7 @@ def fetch_forecast(n_cells: int = 50):
     grid = create_grid(gdf=ne_eclipse, n_cells=n_cells, overlap=True)
 
     if (len(grid) > 500):
-        print(f'Large number of datapoints ({len(grid)}). Proceed?')
+        print(f'Large number of datapoints ({len(grid)}). Press ENTER to proceed or CTRL+C to cancel.')
         input()
 
     lat_lon_datapoints = [[cell.centroid.y, cell.centroid.x] for cell in grid['geometry']]
@@ -329,7 +329,7 @@ def plot_forecast(forecast_datapoints, grid, ne, creation_time, HH=[15,'']):
     grid.plot(column='value', ec='none', lw=0.2, legend=False, cmap='Reds', alpha=0.9, ax=ax, vmin=0, vmax=100)
 
     plt.suptitle(f'Cloud Cover Forecast for {HH[0]}:00-{HH[0]}:59 EDT ({HH[1]}) on 2024-04-08', fontsize=16)
-    ax.set_title(f'Forecast fetch date: {creation_time}Z')
+    ax.set_title(f'Forecast fetched {creation_time}Z.')
     ax.set_xlabel('Longitude [degrees]')
     ax.set_ylabel('Latitude [degrees]')
 
@@ -345,7 +345,7 @@ if __name__ == '__main__':
     hours_of_interest = [[13,'Pre-Eclipse'], [14,'Partial Begins'], [15,'Totality'], [16,'Partial Ends'], [17,'Post-Eclipse']]
     # hours_of_interest = range(6,18)
 
-    forecast_datapoints, grid, ne, creation_time = fetch_forecast(n_cells=50)
+    forecast_datapoints, grid, ne, creation_time = fetch_forecast(n_cells=100)
     for hour in hours_of_interest:
         plot_forecast(forecast_datapoints, grid, ne, creation_time, HH=hour)
     plt.show()
