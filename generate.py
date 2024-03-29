@@ -25,7 +25,11 @@ def init_open_meteo():
     retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
     openmeteo = openmeteo_requests.Client(session=retry_session)
 
-    return openmeteo
+    creation_time = str(cache_session.get('https://api.open-meteo.com/v1/forecast').created_at)[:10] + 'T' + str(cache_session.get('https://api.open-meteo.com/v1/forecast').created_at)[11:19]
+    # print(creation_time)
+    # exit(1)
+
+    return openmeteo, creation_time
 
 def calculate_forecast(openmeteo, coordinates: Tuple[Numeric, Numeric], location: str = '') -> Dataset:
     """## Calculate weather forecast for a location using Open-Meteo API.
@@ -137,56 +141,117 @@ def create_grid(gdf=None, bounds=None, n_cells=10, overlap=False, crs="EPSG:4326
     # return cells, centerpoints
     return cells
 
-def run_model(HH, n_cells: int = 50):
+def fetch_forecast(n_cells: int = 50):
     # TODO: Uncomment.
-    openmeteo = init_open_meteo()
+    openmeteo, creation_time = init_open_meteo()
 
     # %%
-    data = gpd.read_file('eclipse2024/center.shp')
+    # data = gpd.read_file('eclipse2024/center.shp')
     # %%
-    center_coords = data['geometry'].get_coordinates().to_numpy()
+    # center_coords = data['geometry'].get_coordinates().to_numpy()
 
     data = gpd.read_file('eclipse2024/upath_hi.shp')
     upper_coords = data['geometry'].get_coordinates().to_numpy()
 
-    data = gpd.read_file('eclipse2024/upath_lo.shp')
-    lower_coords = data['geometry'].get_coordinates().to_numpy()
+    # data = gpd.read_file('eclipse2024/upath_lo.shp')
+    # lower_coords = data['geometry'].get_coordinates().to_numpy()
+
+    # duration_data = gpd.read_file('eclipse2024/duration.shp')
+    # duration_coords = data['geometry'].get_coordinates().to_numpy()
+
 
     #%%
     path = "./maps/tl_2023_us_state.shp"
     df = gpd.read_file(path)
     df = df.to_crs("EPSG:4326")
 
-    ne_states = ['MA','NH', 'VT', 'RI', 'CT', 'NY', 'PA', 'OH', 'ME']
+    ne_states = ['MA','NH', 'VT', 'RI', 'CT', 'NY', 'ME']
     ne = df[df.STUSPS.isin(ne_states)]
 
-    fig, ax = plt.subplots(figsize=(16, 10))
+    # fig, ax = plt.subplots(figsize=(16, 10))
 
-    plt.xlim([-86, -66])
-    plt.ylim([37.5, 49])
+    # MIN_LAT = 40
+    # MAX_LAT = 48
+    # MIN_LON = -80
+    # MAX_LON = -66
 
-    worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
-    worldmap.plot(color='grey', alpha=0.5, ax=ax)
+    # plt.xlim([MIN_LON, MAX_LON])
+    # plt.ylim([MIN_LAT, MAX_LAT])
 
-    ne.plot(color='tab:blue', ax=ax)
-    ne.boundary.plot(color='black', ax=ax)
+    AOI_MIN_LAT = 41
+    AOI_MAX_LAT = 45.75
+    AOI_MIN_LON = -77
+    AOI_MAX_LON = -69.5
 
-    center_coords = [c for c in center_coords if ((c[0] > -85) and (c[0] < -67))]
+    AOI = gpd.GeoDataFrame(geometry=[Polygon([(AOI_MIN_LON, AOI_MIN_LAT), (AOI_MIN_LON, AOI_MAX_LAT), (AOI_MAX_LON, AOI_MAX_LAT), (AOI_MAX_LON, AOI_MIN_LAT)])], crs='EPSG:4326')
 
-    plt.plot([c[0] for c in center_coords], [c[1] for c in center_coords], color='tab:red')
-    plt.plot([c[0] for c in upper_coords], [c[1] for c in upper_coords], color='tab:orange')
-    plt.plot([c[0] for c in lower_coords], [c[1] for c in lower_coords], color='tab:green')
+    # worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
+    # worldmap.plot(color='grey', alpha=0.5, ax=ax)
+
+    # ne.plot(color='tab:blue', ax=ax)
+    # ne.boundary.plot(color='black', ax=ax)
+
+    # center_coords = [c for c in center_coords if ((c[0] > -85) and (c[0] < -67))]
+
+    # plt.plot([c[0] for c in center_coords], [c[1] for c in center_coords], color='black', linewidth=2)
+    # plt.plot([c[0] for c in center_coords], [c[1] for c in center_coords], color='goldenrod', linewidth=2, linestyle='--')
+    # plt.plot([c[0] for c in upper_coords], [c[1] for c in upper_coords], color='tab:orange')
+    # plt.plot([c[0] for c in lower_coords], [c[1] for c in lower_coords], color='tab:green')
+
+
+    # duration_data.loc[[7], 'geometry'].plot(ax=ax, color='lightgrey', alpha=0.8)
+    # duration_data.loc[[2], 'geometry'].plot(ax=ax, color='lightgrey', alpha=0.8)
+    # duration_data.loc[[1], 'geometry'].plot(ax=ax, color='lightgrey', alpha=0.8)
+    # # duration_data.loc[[7], 'geometry'].plot(ax=ax, color='olive')
+    # # duration_data.loc[[2], 'geometry'].plot(ax=ax, color='darkkhaki')
+    # # duration_data.loc[[1], 'geometry'].plot(ax=ax, color='gold')
+
+    # duration_data.boundary.plot(ax=ax, color='white', linewidth=1.5)
+    # duration_data.boundary.plot(ax=ax, color='k', linewidth=1, linestyle='--')
+
+    # x_offset = 0
+    # y_offset = 0.49
+    # text = ax.annotate('210 s', weight='bold', xy=(-78.5+x_offset, 42.2+y_offset), xytext=(3, 3), textcoords="offset points", fontsize=8)
+    # text.set_rotation(30)
+    # text = ax.annotate('180 s', weight='bold', xy=(-78.5+x_offset, 42.0+y_offset), xytext=(3, 3), textcoords="offset points", fontsize=8)
+    # text.set_rotation(30)
+    # text = ax.annotate('150 s', weight='bold', xy=(-78.5+x_offset, 41.85+y_offset), xytext=(3, 3), textcoords="offset points", fontsize=8)
+    # text.set_rotation(30)
+    # text = ax.annotate('120 s', weight='bold', xy=(-78.5+x_offset, 41.72+y_offset), xytext=(3, 3), textcoords="offset points", fontsize=8)
+    # text.set_rotation(30)
+
+    # # ax.annotate('180s', xy=(-79.68, 42.04), xytext=(3, 3), textcoords="offset points", fontsize=20)
+    # # ax.annotate('<=150s', xy=(-79.68, 41.75), xytext=(3, 3), textcoords="offset points", fontsize=20)
+    # ax.annotate('White boundary indicates 30 second duration decrease.', xy=(-79.68, 40.2), xytext=(3, 3), textcoords="offset points", fontsize=8)
+
+    # for i in range(7):
+        # ax.annotate(i, xy=(-78, 41), xytext=(3, 3), textcoords="offset points", fontsize=24)
+
+    # exit(1)
+
+    # for idx, row in duration_data.iterrows():
+    #     # duration_data.plot(color=duration_data['Duration'], ax=ax)
+    #     X,Y = row['geometry'].exterior.coords.xy
+    #     # print( list(X),  list(Y) )
+    #     plt.plot(X, Y, color='white')
+    #     if (idx > 3):
+    #         break
+
+    # for POLYGON in duration_data:
+    #     duration_coords = POLYGON['geometry'].exterior.coords.xy
+    #     plt.plot([c[0] for c in duration_coords], [c[1] for c in duration_coords], color='white')
 
     eclipse_geom = Polygon(upper_coords)
     eclipse = gpd.GeoDataFrame(index=[0], crs='EPSG:4326', geometry=[eclipse_geom]) 
 
     ne_eclipse = gpd.overlay(ne, eclipse, how='intersection')
+    ne_eclipse = gpd.overlay(ne_eclipse, AOI, how='intersection')
 
     grid = create_grid(gdf=ne_eclipse, n_cells=n_cells, overlap=True)
 
     if (len(grid) > 500):
-        print('Too many data points! Exiting...')
-        exit(1)
+        print(f'Large number of datapoints ({len(grid)}). Proceed?')
+        input()
 
     lat_lon_datapoints = [[cell.centroid.y, cell.centroid.x] for cell in grid['geometry']]
     
@@ -194,13 +259,66 @@ def run_model(HH, n_cells: int = 50):
     #     print(lat_lon)
 
     forecast_datapoints = [calculate_forecast(openmeteo, lat_lon) for lat_lon in lat_lon_datapoints]
-    overcast_datapoints = [forecast_datapoint['cloud_cover'].values[HH] for forecast_datapoint in forecast_datapoints]
-    grid['value'] = overcast_datapoints
-    # grid['value'] = grid.apply(lambda x: np.random.normal(50, 15),1)
 
-    # print(forecast_datapoints)
-    # print(overcast_datapoints)
-    datetimes = [forecast_datapoint['date'].values[HH] for forecast_datapoint in forecast_datapoints]
+    return forecast_datapoints, grid, ne, creation_time
+
+def plot_forecast(forecast_datapoints, grid, ne, creation_time, HH=[15,'']):
+    fig, ax = plt.subplots(figsize=(16, 10))
+    
+    MIN_LAT = 40
+    MAX_LAT = 48
+    MIN_LON = -80
+    MAX_LON = -66
+
+    plt.xlim([MIN_LON, MAX_LON])
+    plt.ylim([MIN_LAT, MAX_LAT])
+
+    data = gpd.read_file('eclipse2024/center.shp')
+    center_coords = data['geometry'].get_coordinates().to_numpy()
+    
+    data = gpd.read_file('eclipse2024/upath_hi.shp')
+    upper_coords = data['geometry'].get_coordinates().to_numpy()
+    
+    data = gpd.read_file('eclipse2024/upath_lo.shp')
+    lower_coords = data['geometry'].get_coordinates().to_numpy()
+    
+    duration_data = gpd.read_file('eclipse2024/duration.shp')
+
+    worldmap = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
+    worldmap.plot(color='grey', alpha=0.5, ax=ax)
+
+    ne.plot(color='tab:blue', ax=ax)
+    ne.boundary.plot(color='black', ax=ax)
+
+    plt.plot([c[0] for c in center_coords], [c[1] for c in center_coords], color='black', linewidth=2)
+    plt.plot([c[0] for c in center_coords], [c[1] for c in center_coords], color='goldenrod', linewidth=2, linestyle='--')
+    plt.plot([c[0] for c in upper_coords], [c[1] for c in upper_coords], color='tab:orange')
+    plt.plot([c[0] for c in lower_coords], [c[1] for c in lower_coords], color='tab:green')
+
+    duration_data.loc[[7], 'geometry'].plot(ax=ax, color='lightgrey', alpha=0.8)
+    duration_data.loc[[2], 'geometry'].plot(ax=ax, color='lightgrey', alpha=0.8)
+    duration_data.loc[[1], 'geometry'].plot(ax=ax, color='lightgrey', alpha=0.8)
+    
+    duration_data.boundary.plot(ax=ax, color='white', linewidth=1.5)
+    duration_data.boundary.plot(ax=ax, color='k', linewidth=1, linestyle='--')
+    
+    x_offset = 0
+    y_offset = 0.49
+    text = ax.annotate('210 s', weight='bold', xy=(-78.5+x_offset, 42.2+y_offset), xytext=(3, 3), textcoords="offset points", fontsize=8)
+    text.set_rotation(30)
+    text = ax.annotate('180 s', weight='bold', xy=(-78.5+x_offset, 42.0+y_offset), xytext=(3, 3), textcoords="offset points", fontsize=8)
+    text.set_rotation(30)
+    text = ax.annotate('150 s', weight='bold', xy=(-78.5+x_offset, 41.85+y_offset), xytext=(3, 3), textcoords="offset points", fontsize=8)
+    text.set_rotation(30)
+    text = ax.annotate('120 s', weight='bold', xy=(-78.5+x_offset, 41.72+y_offset), xytext=(3, 3), textcoords="offset points", fontsize=8)
+    text.set_rotation(30)
+    
+    ax.annotate('White boundary indicates 30 second duration decrease.', xy=(-79.68, 40.2), xytext=(3, 3), textcoords="offset points", fontsize=8)
+    ax.annotate(f'{HH[1]}', xy=(-79, 47.2), xytext=(3, 3), textcoords="offset points", fontsize=16)
+
+    overcast_datapoints = [forecast_datapoint['cloud_cover'].values[HH[0]] for forecast_datapoint in forecast_datapoints]
+    grid['value'] = overcast_datapoints
+    datetimes = [forecast_datapoint['date'].values[HH[0]] for forecast_datapoint in forecast_datapoints]
 
     for i, _ in enumerate(overcast_datapoints):
         print(f'{datetimes[i]}: {overcast_datapoints[i]}%')
@@ -210,18 +328,27 @@ def run_model(HH, n_cells: int = 50):
     cbar=plt.cm.ScalarMappable(norm=norm, cmap='Reds')
     grid.plot(column='value', ec='none', lw=0.2, legend=False, cmap='Reds', alpha=0.9, ax=ax, vmin=0, vmax=100)
 
-    # plt.scatter([c[1] for c in lat_lon_datapoints], [c[0] for c in lat_lon_datapoints], color='black', s=3, marker='x')
-    # print(centerpoints)
-
-    ax.set_title(f'Cloud Cover Forecast for {HH}:00-{HH}:59 EDT on 2024-04-08')
+    plt.suptitle(f'Cloud Cover Forecast for {HH[0]}:00-{HH[0]}:59 EDT ({HH[1]}) on 2024-04-08', fontsize=16)
+    ax.set_title(f'Forecast fetch date: {creation_time}Z')
     ax.set_xlabel('Longitude [degrees]')
     ax.set_ylabel('Latitude [degrees]')
 
     ax_cbar = fig.colorbar(cbar, ax=ax)
     ax_cbar.set_label('Total Cloud Cover [%]')
 
-    plt.show()
+    # Save fig
+    creation_time = creation_time.replace(':', '')
+    creation_time = creation_time.replace('-', '')
+    plt.savefig(f'frames/cloud_cover_{creation_time}Z_{HH[0]}_{HH[1]}.png')
 
 if __name__ == '__main__':
-    hour_of_interest = 15
-    run_model(hour_of_interest, n_cells=50)
+    hours_of_interest = [[13,'Pre-Eclipse'], [14,'Partial Begins'], [15,'Totality'], [16,'Partial Ends'], [17,'Post-Eclipse']]
+    # hours_of_interest = range(6,18)
+
+    forecast_datapoints, grid, ne, creation_time = fetch_forecast(n_cells=50)
+    for hour in hours_of_interest:
+        plot_forecast(forecast_datapoints, grid, ne, creation_time, HH=hour)
+    plt.show()
+
+    # data = gpd.read_file('eclipse2024/ppath.shp')
+    # print(data)
